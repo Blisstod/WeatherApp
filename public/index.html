@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Name Input</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="form-container">
+                <form action="/" method="post">
+                    <input type="text" id="cityName" name="cityName" placeholder="Enter city name">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+            <div id="weatherResult"></div>
+        </div>
+        <div id="map" class="map-section"></div>
+    </div>
+    <footer>
+        Azimbai Nurzhau SE-2204
+    </footer>
+    <script src="client.js"></script>
+</body>
+</html>
