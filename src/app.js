@@ -2,10 +2,12 @@ const bodyParser = require('body-parser');
 const express = require('express'); 
 const https = require('https'); 
 const axios = require('axios');
+const compression = require('compression');
 
 const app = express(); 
 const port = 3000;
 
+app.use(compression());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -21,21 +23,21 @@ app.post('/', (req, res) => {
     } else {
         return res.status(400).json({ error: "Invalid request parameters." });
     }
-    
+
     https.get(url, (apiRes) => {
         let dataChunks = [];
         apiRes.on("data", (chunk) => {
             dataChunks.push(chunk);
         }).on('end', () => {
             const weatherData = JSON.parse(Buffer.concat(dataChunks));
-            getAQIData(weatherData.name, (aqiError, aqiData) => {
-                getAstroData(weatherData.name, (astroError, astroData) => {
-                    if (aqiError || astroError) {
-                        console.error(aqiError || astroError);
-                        return res.json({ weatherData, aqiError: 'Error fetching AQI data.', astroError: 'Error fetching Astro data.' });
-                    }
-                    res.json({ weatherData, aqiData, astroData });
-                });
+            Promise.all([
+                getAQIData(weatherData.name).catch(error => ({ error })),
+                getAstroData(weatherData.name).catch(error => ({ error }))
+            ]).then(([aqiData, astroData]) => {
+                res.json({ weatherData, aqiData: aqiData.error ? 'Error fetching AQI data.' : aqiData, astroData: astroData.error ? 'Error fetching Astro data.' : astroData });
+            }).catch(error => {
+                console.error(error);
+                res.status(500).json({ error: "Error in processing external API requests." });
             });
         });
     }).on('error', (e) => {
@@ -48,21 +50,20 @@ app.listen(port, () => {
     console.log(`Server is listening on port ${port}`); 
 });
 
-function getAQIData(cityName, callback) {
+function getAQIData(cityName) {
     const aqiApiKey = 'fdae7294c6d86ad41979c9d22726e343ce0033da';
-    console.log(cityName);
     const aqiUrl = `https://api.waqi.info/feed/${cityName}/?token=${aqiApiKey}`;
 
-    axios.get(aqiUrl)
-        .then(response => callback(null, response.data))
-        .catch(error => callback(error));
+    return axios.get(aqiUrl)
+        .then(response => response.data)
+        .catch(error => Promise.reject(error));
 }
 
-function getAstroData(cityName, callback){
+function getAstroData(cityName){
     const astroApiKey = "ee3d07496ca145f6817b9bd734621a81";
-    const astroUrl = `https://api.ipgeolocation.io/astronomy?apiKey=${astroApiKey}&location=${cityName}`
+    const astroUrl = `https://api.ipgeolocation.io/astronomy?apiKey=${astroApiKey}&location=${cityName}`;
 
-    axios.get(astroUrl)
-        .then(response => callback(null, response.data))
-        .catch(error => callback(error));
+    return axios.get(astroUrl)
+        .then(response => response.data)
+        .catch(error => Promise.reject(error));
 }
