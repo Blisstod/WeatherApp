@@ -11,6 +11,7 @@
   ### axios
   ### https
   ### body-parser
+  ### compression
 
 # API that have been used:
   ### openweathermap.org
